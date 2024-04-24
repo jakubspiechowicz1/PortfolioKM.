@@ -49,7 +49,7 @@ const AccessibilityWidget = () => {
 
   return (
     
-    <div className={`fixed right-4 bottom-4 z-50 max-h-[80vh] ${menuOpen ? 'overflow-y-auto' : ''}`}>
+    <div className={`fixed right-4 bottom-4 z-50 max-h-[80vh] max-w-[80vh] ${menuOpen ? 'overflow-y-auto' : ''}`}>
     <button
       onClick={() => setMenuOpen(!menuOpen)}
       className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-lg transform transition-all duration-500 hover:scale-105"
