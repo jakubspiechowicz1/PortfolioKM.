@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as FaIcons from 'react-icons/fa';
 import { createPortal } from 'react-dom';
@@ -7,61 +7,59 @@ import '../../components/i18n';
 const VoiceControl = () => {
   const { t } = useTranslation();
   const { i18n } = useTranslation();
+  const recognitionRef = useRef(null); // useRef dla zarządzania instancją recognition
   const [isListening, setIsListening] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
 
   useEffect(() => {
-    const { webkitSpeechRecognition } = window;
-    let recognition;
-  
     if ('webkitSpeechRecognition' in window) {
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = i18n.language === 'pl' ? 'pl-PL' : (i18n.language === 'de' ? 'de-DE' : 'en-US');
-      recognition.continuous = true;
-      recognition.interimResults = true;
+      const { webkitSpeechRecognition } = window;
+      recognitionRef.current = new webkitSpeechRecognition();
+      recognitionRef.current.lang = i18n.language === 'pl' ? 'pl-PL' : (i18n.language === 'en-US');
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
   
-      recognition.onresult = (event) => {
+      recognitionRef.current.onresult = (event) => {
         let lastResult = event.results[event.resultIndex];
         if (lastResult.isFinal) {
           const command = lastResult[0].transcript.trim().toLowerCase();
           console.log('Recognized command:', command);
-          // Obsługa komend
           switch (command) {
             case 'przewiń w górę':
             case 'scroll up':
-            case 'nach oben scrollen':
+            
               window.scrollBy(0, -300);
               break;
             case 'przewiń w dół':
             case 'scroll down':
-            case 'nach unten scrollen':
+            
               window.scrollBy(0, 300);
               break;
             case 'wróć':
             case 'go back':
-            case 'zurück gehen':
+            
               if (window.history.length > 1) {
                 window.history.back();
               }
               break;
             case 'strona główna':
             case 'home':
-            case 'Startseite':
+            
               window.location.href = '/';
               break;
             case 'moje prace':
             case 'my works':
-            case 'meine Arbeiten':
+            
               window.location.href = '/projects';
               break;
             case 'kontakt':
             case 'contact':
-            case 'Kontakt':
+            
               window.location.href = '/contact';
               break;
             case 'Skontaktuj się':
             case 'contact me':
-            case 'kontaktiere mich':
+            
               window.location.href = '/contact';
               break;
             default:
@@ -70,35 +68,42 @@ const VoiceControl = () => {
           }
         }
       };
-  
-      recognition.onend = () => {
+
+      recognitionRef.current.onend = () => {
         console.log('Speech recognition service disconnected');
         if (isListening) {
-          recognition.start();
+          recognitionRef.current.start();
           console.log('Voice recognition restarted');
         }
       };
   
-      recognition.onerror = (error) => {
+      recognitionRef.current.onerror = (error) => {
         console.error('Speech recognition error:', error);
       };
     }
   
-    if (isListening && recognition) {
-      recognition.start();
-      console.log('Voice recognition started');
-    } else if (!isListening && recognition) {
-      recognition.stop();
-      console.log('Voice recognition stopped');
+    // Subscribe to recognition events
+    if (isListening) {
+      try {
+        recognitionRef.current.start();
+        console.log('Voice recognition started');
+      } catch (error) {
+        console.error('Failed to start recognition:', error);
+      }
     }
   
+    // Cleanup function
     return () => {
-      if (recognition) {
-        recognition.stop();
-        console.log('Voice recognition stopped');
+      try {
+        if (recognitionRef.current && recognitionRef.current.state !== 'inactive') {
+          recognitionRef.current.stop();
+          console.log('Voice recognition stopped');
+        }
+      } catch (error) {
+        console.error('Failed to stop recognition:', error);
       }
     };
-  }, [isListening, i18n.language]); // Dodaj i18n.language jako zależność
+  }, [isListening, i18n.language]);
 
   const renderCommandsDialog = () => {
     return createPortal(
@@ -112,13 +117,13 @@ const VoiceControl = () => {
           </button>
           <h2 className="text-xl font-bold mb-4">{t('voiceActive')}</h2>
           <ul className="mb-4">
-            <li>"Przewiń w górę" / "Scroll up" / "Nach oben scrollen"</li>
-            <li>"Przewiń w dół" / "Scroll down" / "Nach unten scrollen"</li>
-            <li>"Wróć" / "Go back" / "Zurück gehen"</li>
-            <li>"Strona główna" / "Home" / "Startseite"</li>
-            <li>"Moje prace" / "My works" / "Meine Arbeiten"</li>
-            <li>"Kontakt" / "Contact" / "Kontakt"</li>
-            <li>"Skontaktuj się" / "Contact me" / "Kontaktiere mich"</li>
+            <li>"Przewiń w górę" / "Scroll up"</li>
+            <li>"Przewiń w dół" / "Scroll down"</li>
+            <li>"Wróć" / "Go back""</li>
+            <li>"Strona główna" / "Home"</li>
+            <li>"Moje prace" / "My works"</li>
+            <li>"Kontakt" / "Contact"</li>
+            <li>"Skontaktuj się" / "Contact me"</li>
           </ul>
           <button
             onClick={() => setShowCommands(false)}
@@ -134,29 +139,31 @@ const VoiceControl = () => {
 
   return (
     <div>
-<button onClick={() => {
-    setIsListening(prev => !prev); // Toggle the listening state
-    if (recognition) {
-      recognition.stop();
-      console.log('Manually stopped voice recognition');
-    }
-  }} className="h-full w-full flex z-10 absolute">
-  {isListening ? '' : ''}
-</button>
+      <button onClick={() => setIsListening(prev => !prev)} className="h-full w-full flex z-10 absolute">
+        {isListening ? '' : ''}
+      </button>
 
       {isListening && createPortal(
-        <div className="fixed bottom-0 left-0 w-auto flex items-center h-[60px] bg-red-500 p-2 shadow-md">
-          <span className="text-white ">{t('commandsAvailable')}</span>
-          <button onClick={() => setShowCommands(true)} className="ml-2 text-white ">
-            <FaIcons.FaInfoCircle />
-          </button>
-        </div>,
-        document.body
-      )}
+        <div className={`fixed bottom-0 sm:w-auto xl:w-[15%] flex items-center p-2 shadow-md transition-all duration-300 
+                  bg-red-500 text-white ${isListening ? "h-[60px]" : "h-0 opacity-0"} 
+                  ${isListening ? 'bottom-[90px] sm:bottom-0' : 'bottom-0'}
+                  right-0 sm:left-0`}>
 
-      {showCommands && renderCommandsDialog()}
-    </div>
-  );
+
+
+
+
+        <span>{t('commandsAvailable')}</span>
+        <button onClick={() => setShowCommands(true)} className="ml-2">
+          <FaIcons.FaInfoCircle />
+        </button>
+      </div>,
+      document.body
+    )}
+
+    {showCommands && renderCommandsDialog()}
+  </div>
+);
 };
 
 export default VoiceControl;

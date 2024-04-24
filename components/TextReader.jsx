@@ -12,7 +12,6 @@ const TextReader = ({ text }) => {
       const langMap = {
         'en': 'en-US',
         'pl': 'pl-PL',
-        'de': 'de-DE',
       };
       
       // Jeżeli język nie jest dostępny, użyj polskiego jako języka domyślnego

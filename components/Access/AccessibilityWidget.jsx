@@ -14,6 +14,7 @@ import NumericKeyPadControl from './NumericKeyPadControl';
 import VoiceControl from './VoiceControl';
 import ColorSchemeSwitcher from './ColorSchemeSwitcher';
 import SimplifyLayout from './SimplifyLayout';
+import LowContrast from './LowContrast';
 const TextReaderClient = dynamic(() => import('../TextReader'), { ssr: false });
 import dynamic from 'next/dynamic';
 import '../i18n';
@@ -57,9 +58,9 @@ const AccessibilityWidget = () => {
       <TextReaderClient text={t('access')} />{t('access')}
     </button>
   
-    <div className={`${menuOpen ? '' : 'hidden'}`}>
-      <div className="dark:bg-accessBackground mt-2 bg-white shadow-2xl rounded-lg md:right-4 lg:right-4 xl:right-4 2xl:right-4 xl:w-[40vw] w-[90vw]">
-        <ul className="dark:text-accessText  text-gray-700  ">
+    <div className={`${menuOpen ? '' : 'hidden'} left-[0]`}>
+    <div className="dark:bg-accessBackground mt-2 bg-white shadow-2xl rounded-lg right-4 xl:w-[40vw] w-full l-[0%] md:w-auto overflow-hidden">
+    <ul className="dark:text-accessText text-gray-700  whitespace-normal">
           
           <li className=" flex items-center justify-between p-4 bg-blue-500 text-white rounded-t-lg">
             <div className="flex items-center">
@@ -209,7 +210,7 @@ const AccessibilityWidget = () => {
               </button>
             </li>
             {userMenuOpen4 && (
-              <div className="ml-3 flex">
+              <div className="ml-3 flex flex-col sm:flex-row">
 
 
                 {/* ThemeCustomizer */}
@@ -233,6 +234,20 @@ const AccessibilityWidget = () => {
                     <FaIcons.FaAdjust className="dark:text-accessButtonHover text-4xl text-blue-500" />
                     <span className="text-center mt-2 text-gray-700">
                     {t('lightDarkContrast')}
+                    </span>
+                  </div>
+                </li>
+                <li className=" dark:hover:text-accessBackground group relative w-32 h-32 bg-white border-2 border-gray-200 rounded-lg overflow-hidden shadow-lg cursor-pointer">
+                <LowContrast  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition duration-300 flex justify-center items-center">
+                    <span className="text-white opacity-0 group-hover:opacity-100 transition duration-300 text-center">
+                    <TextReaderClient text={t('contrastSwitcherDescription')} />{t('contrastSwitcherDescription')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col justify-center items-center h-full z-10 p-4">
+                    <FaIcons.FaAdjust className="dark:text-accessButtonHover text-4xl text-blue-500" />
+                    <span className="text-center mt-2 text-gray-700">
+                    {t('lowcontrast')}
                     </span>
                   </div>
                 </li>
